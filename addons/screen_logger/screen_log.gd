@@ -1,6 +1,6 @@
 extends CanvasLayer
 
-# ─── Configuración ───────────────────────────────────────────────
+# ─── Configuration ───────────────────────────────────────────────
 const MAX_MESSAGES     := 15
 const MESSAGE_DURATION := 5.0
 const BASE_RESOLUTION  := Vector2(1920.0, 1080.0)
@@ -23,14 +23,14 @@ const COLORS := {
 	"watch":   Color(1.0, 0.75, 0.3),
 }
 
-# ─── Posición de los paneles ─────────────────────────────────────
+# ─── Panels position ─────────────────────────────────────────────
 enum Corner { TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT }
 
-# Cambia estas variables en cualquier momento para mover los paneles
+# Vars to define the position of the panels
 var log_corner:   int = Corner.TOP_LEFT
 var watch_corner: int = Corner.TOP_RIGHT
 
-# ─── Estado interno ──────────────────────────────────────────────
+# ─── Private variables ───────────────────────────────────────────
 var _log_container:      VBoxContainer
 var _watch_container:    VBoxContainer
 var _left_panel:         PanelContainer
@@ -40,7 +40,7 @@ var _watches:            Dictionary = {}
 var _last_viewport_size: Vector2 = Vector2.ZERO
 
 # ═════════════════════════════════════════════════════════════════
-#  Helpers de escala  (definidos ANTES de _setup_ui)
+#  Scale helpers  (defined before _setup_ui)
 # ═════════════════════════════════════════════════════════════════
 
 func _get_viewport_size() -> Vector2:
@@ -104,7 +104,7 @@ func _format_value(v: Variant) -> String:
 	return str(v)
 
 # ═════════════════════════════════════════════════════════════════
-#  Ciclo de vida
+#  Life cicle
 # ═════════════════════════════════════════════════════════════════
 
 func _ready() -> void:
@@ -136,7 +136,7 @@ func _corner_position(corner: int, panel_width: float, offset: int, panel_height
 	return Vector2(offset, offset)
 
 # ═════════════════════════════════════════════════════════════════
-#  Construcción de UI
+#  UI build
 # ═════════════════════════════════════════════════════════════════
 
 func _setup_ui() -> void:
@@ -210,7 +210,7 @@ func _apply_layout() -> void:
 				else:
 					log_pos.x += overlap
 
-	# ── Aplicar ──────────────────────────────────────────────────
+	# ── Apply ──────────────────────────────────────────────────
 	_left_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	_left_panel.position = log_pos
 	_left_panel.custom_minimum_size = Vector2(w_log, 0)
@@ -244,7 +244,7 @@ func _rescale_existing_labels() -> void:
 					child.add_theme_font_size_override("font_size", fs)
 
 # ═════════════════════════════════════════════════════════════════
-#  API PÚBLICA — Logs efímeros
+#  API PUBLIC — Efemeral logs
 # ═════════════════════════════════════════════════════════════════
 
 func info(message: String)    -> void: _add_message("[INFO] " + message, COLORS.info)
@@ -263,7 +263,7 @@ func clear_logs() -> void:
 	_messages.clear()
 
 # ═════════════════════════════════════════════════════════════════
-#  API PÚBLICA — Watch
+#  API PUBLIC — Watch
 # ═════════════════════════════════════════════════════════════════
 
 func watch(key: String, value: Variant, icon: String = "") -> void:
@@ -313,10 +313,10 @@ func clear_watches() -> void:
 	_watches.clear()
 
 # ═════════════════════════════════════════════════════════════════
-#  API PÚBLICA — Log condicional
+#  API PUBLIC — Conditional Logs
+#  Only show the message if the condition is true
 # ═════════════════════════════════════════════════════════════════
 
-## Muestra un mensaje solo si la condición es true
 func log_if(condition: bool, message: String) -> void:
 	if condition:
 		_add_message("[INFO] " + message, COLORS.info)
@@ -341,21 +341,22 @@ func debug_if(condition: bool, message: String) -> void:
 	if condition:
 		debug(message)
 
-## Muestra el mensaje con el tipo que corresponda según la condición.
-## Útil para mostrar OK/FAIL de una comprobación en una sola línea.
+## Shows the message with the corresponding type of the condition
+## Useful to show OK/FAIL when checking in one line.
 ##
-##   ScreenLog.log_ok(is_on_floor(), "En suelo")
-##   → "[OK]  En suelo"  si true
-##   → "[ERR] En suelo"  si false
+##   ScreenLog.log_ok(is_on_floor(), "On ground")
+##   → "[OK]  On ground"  if true
+##   → "[ERR] On ground"  if false
 func log_ok(condition: bool, message: String) -> void:
 	if condition:
 		success(message)
 	else:
 		error(message)
 
-## Igual que log_ok pero usa warning en lugar de error para el caso false.
+## Shows the message with the corresponding type of the condition
+## Useful to show OK/WARNING when checking in one line.
 ##
-##   ScreenLog.log_warn(velocity.length() < 500.0, "Velocidad normal")
+##   ScreenLog.log_warn(velocity.length() < 500.0, "Nomral speed")
 func log_warn(condition: bool, message: String) -> void:
 	if condition:
 		success(message)
@@ -363,22 +364,22 @@ func log_warn(condition: bool, message: String) -> void:
 		warning(message)
 
 # ═════════════════════════════════════════════════════════════════
-#  API PÚBLICA — Posición de paneles
+#  API PUBLIC — Panels positions
 # ═════════════════════════════════════════════════════════════════
 
-## Mueve el panel de logs a una esquina.
+## Move the logs panel to a corner.
 ## ScreenLog.set_log_corner(ScreenLog.Corner.BOTTOM_LEFT)
 func set_log_corner(corner: int) -> void:
 	log_corner = corner
 	_rebuild_layout()
 
-## Mueve el panel de watches a una esquina.
+## Moves the watch logs to a corner.
 ## ScreenLog.set_watch_corner(ScreenLog.Corner.BOTTOM_RIGHT)
 func set_watch_corner(corner: int) -> void:
 	watch_corner = corner
 	_rebuild_layout()
 
-## Mueve ambos paneles a la vez.
+## Move both panels to a corner.
 ## ScreenLog.set_corners(ScreenLog.Corner.BOTTOM_LEFT, ScreenLog.Corner.BOTTOM_RIGHT)
 func set_corners(log_c: int, watch_c: int) -> void:
 	log_corner   = log_c
@@ -386,7 +387,7 @@ func set_corners(log_c: int, watch_c: int) -> void:
 	_rebuild_layout()
 
 # ═════════════════════════════════════════════════════════════════
-#  Lógica interna — Mensajes con agrupación
+#  Logic — Agrupation messages
 # ═════════════════════════════════════════════════════════════════
 
 func _add_message(text: String, color: Color) -> void:
@@ -434,7 +435,7 @@ func _add_message(text: String, color: Color) -> void:
 	_start_timer(entry)
 	_messages.append(entry)
 	_start_timer(entry)
-	_reanchor_bottom_panels()   # ← añade esta línea
+	_reanchor_bottom_panels()
 
 func _make_badge() -> Label:
 	var badge := Label.new()
@@ -481,8 +482,8 @@ func _destroy_entry(entry: Dictionary) -> void:
 	if is_instance_valid(entry.row):
 		entry.row.queue_free()
 
-# Recalcula solo la posición Y de los paneles BOTTOM sin esperar un frame.
-# Se llama cada vez que el contenido crece para mantenerlos pegados al borde.
+# Recalculate the Y position of the BOTTOM panels without waiting for a frame.
+# Its called every time the content size changes to keep them sttached to the border.
 func _reanchor_bottom_panels() -> void:
 	await get_tree().process_frame   # esperar a que size.y se actualice
 
